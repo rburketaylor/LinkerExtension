@@ -1,0 +1,13 @@
+{
+    "name": "Linker",
+    "description": "Extension to check for linked email addresses on the page.",
+    "version": "1.0",
+    "manifest_version": 3,
+    "content_scripts": [{
+        "matches": ["*://jira.gpei.ca/*"],
+        "js": ["jquery-3.6.0.min.js", "arrive.min.js", "inject.js"]
+    }],
+    "permissions": [
+        "activeTab"
+    ]
+  }

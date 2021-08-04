@@ -1,5 +1,4 @@
 let currentIssue = "";
-let email = "";
 
 async function makeRequest(url) {
     let response = await fetch(url);
@@ -12,7 +11,7 @@ async function makeRequest(url) {
     }
 }
 
-async function getTicketsByEmail() {
+async function getTicketsByEmail(email) {
     const url = 'https://jira.gpei.ca/rest/api/2/search?jql=cf[10715]~"' + email + '"&fields=key';
     let tickets = [];
     const json = await makeRequest(url);
@@ -32,23 +31,10 @@ function checkForLink(ticket){
     return links.indexOf(ticket) > -1;
 }
 
-async function sendNotification() {
-    let emailElement = document.querySelector("a[title='Follow link']");
-    let peip = document.getElementById("key-val");
-    if (emailElement == null || peip == null) {
-        await sleep(300);
-        sendNotification();
-        return;
-    } else if(currentIssue == peip) {
-        return;
-    }
-    else {
-        peip = peip.innerHTML;
-        email = emailElement.innerHTML;
-    }
+async function sendNotification(email, peip) {
     currentIssue = peip;
     document.getElementById('opsbar-transitions_more').onclick = async function () {
-        const tickets = await getTicketsByEmail();
+        const tickets = await getTicketsByEmail(email);
         if (tickets.length <= 1) {
             console.log("no tickets");
             return;
@@ -70,27 +56,29 @@ async function sendNotification() {
     }
 }
 
-function sleep(ms){
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function checkPageChanges() {
-    const peip = document.getElementById("key-val");
-    if (peip != null) {
-        if (peip.innerHTML != currentIssue) {
-            sendNotification();
-            return true;
-        }
-    }
-    else{
-        await sleep(300);
-        checkPageChanges();
-    }
-}
-
 (async () => {
     'use strict';
-    $(document).arrive("#key-val", {fireOnAttributesModification: true, existing: true}, function() {
-        checkPageChanges();
+    const options = {
+        fireOnAttributesModification: true,
+        existing: true
+    };
+
+    $(document).arrive("#key-val", options, function() {
+        let observer = new MutationObserver(function (mutations, me) {
+            const emailElement = document.querySelector("a[title='Follow link']");
+            const peipElement = document.getElementById("key-val"); 
+            if(peipElement != null && emailElement != null){
+                const email = emailElement.innerHTML;
+                const peip = peipElement.innerHTML;
+                sendNotification(email, peip);
+                me.disconnect();
+                return;
+            }
+        });
+
+        observer.observe(document, {
+            childList: true,
+            subtree: true
+        });
     });
 })();

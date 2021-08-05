@@ -36,10 +36,8 @@ async function sendNotification(email, peip) {
     document.getElementById('opsbar-transitions_more').onclick = async function () {
         const tickets = await getTicketsByEmail(email);
         if (tickets.length <= 1) {
-            console.log("no tickets");
             return;
         }
-        console.log("tickets");
         let alerttext = "";
         for (let i = 0; i < tickets.length; i++) {
             if (tickets[i] != currentIssue && checkForLink(tickets[i]) == false) {
